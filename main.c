@@ -32,15 +32,22 @@ void izmeniLozinku();
 
 int main(void) {
     start();
-    mainMenu();
     return 0;
 }
+
+
+
+
+
+
+
 void start()
 {
     int unos;
     typewrite(1, "Dobrodosli.\n");
     typewrite(1, "1.Prijavite se\n");
     typewrite(1, "2.Registrujte se\n");
+  
     do {
         scanf_s("%d", &unos);
         switch (unos)
@@ -99,7 +106,7 @@ void prijaviSe()
             typewrite(3, "Uspesno logovanje.\n");
             fclose(users);
             strcpy_s(trenutniUser, sizeof(trenutniUser), ime);
-            sprintf_s(FILE_PATH, sizeof(FILE_PATH), "data\\%s_file", ime);
+            sprintf_s(FILE_PATH, sizeof(FILE_PATH), "data\\%s_file.dat", ime);
             mainMenu();
             return;
         }
@@ -114,8 +121,7 @@ bool duplikat(KORISNIK k)
     errno_t err = fopen_s(&provera, USERS_PATH, "rb");
     if (err != 0 || provera == NULL)
     {
-        typewrite(1,"Greska pri otvaranju fajla...");
-        return;
+        return false;
     }
     KORISNIK p;
     while (fread(&p, sizeof(KORISNIK), 1, provera))
@@ -155,12 +161,15 @@ void registrujSe()
 
     if (fwrite(&k, sizeof(KORISNIK), 1, users) != 1) {
         typewrite(3, "Greska pri upisu u fajl!\n");
+        fclose(users);
     }
     else
     {
         typewrite(3, "Uspesna registracija.");
         strcpy_s(trenutniUser, sizeof(trenutniUser), ime);
-        sprintf_s(FILE_PATH, sizeof(FILE_PATH), "data\\%s_file", ime);
+        sprintf_s(FILE_PATH, sizeof(FILE_PATH), "data\\%s_file.dat", ime);
+        fclose(users);
+
         mainMenu();
     }
     
