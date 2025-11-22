@@ -7,6 +7,7 @@
 
 #define USERS_PATH "data\\korisnici.dat"
 
+char kljuc[64];
 typedef struct Lozinka {
     char naziv[50];
     char korisnickoIme[50];
@@ -16,6 +17,7 @@ typedef struct Korisnik {
     char korisnickoIme[50];
     char lozinka[50];
 }KORISNIK;
+
 char trenutniUser[50] = "";
 char FILE_PATH[260] = "";
 
@@ -34,13 +36,6 @@ int main(void) {
     start();
     return 0;
 }
-
-
-
-
-
-
-
 void start()
 {
     int unos;
@@ -64,6 +59,19 @@ void start()
     
     } while(unos != 0);
 
+}
+void generisi_xor_lozinku(const char *lozinka)
+{
+    strcpy_s(kljuc, sizeof(kljuc), lozinka);
+}
+void xor_operacija(char* data, size_t duzina)
+{
+    unsigned char* bajtovi = (unsigned char*)data;//konvert
+    size_t kljuc_duzina = strlen(kljuc);
+        for (size_t i = 0; i < duzina; i++)
+        {
+            bajtovi[i] ^= (unsigned char)kljuc[i % kljuc_duzina];
+        }
 }
 void prijaviSe()
 {
@@ -92,17 +100,18 @@ void prijaviSe()
 
         typewrite(1, "\nUnesite lozinku: ");
         scanf_s("%s", lozinka, (unsigned)sizeof(lozinka));
-
-        bool found = false;
+        generisi_xor_lozinku(lozinka);
+        bool pronadjen = false;
         while (fread(&k, sizeof(KORISNIK), 1, users) == 1) {
+            xor_operacija(&k, sizeof(KORISNIK));
             if (strcmp(k.korisnickoIme, ime) == 0 && strcmp(k.lozinka, lozinka) == 0)
             {
-                found = true;
+                pronadjen = true;
                 break;
             }
         }
 
-        if (found) {
+        if (pronadjen) {
             typewrite(3, "Uspesno logovanje.\n");
             fclose(users);
             strcpy_s(trenutniUser, sizeof(trenutniUser), ime);
@@ -126,6 +135,7 @@ bool duplikat(KORISNIK k)
     KORISNIK p;
     while (fread(&p, sizeof(KORISNIK), 1, provera))
     {
+        xor_operacija(&p, sizeof(KORISNIK));
         if (strcmp(p.korisnickoIme, k.korisnickoIme) == 0) {
             fclose(provera);
             return true;
@@ -146,6 +156,7 @@ void registrujSe()
     KORISNIK k;
     strcpy_s(k.korisnickoIme,sizeof(k.korisnickoIme), ime);
     strcpy_s(k.lozinka,sizeof(k.lozinka), lozinka);
+    generisi_xor_lozinku(lozinka);
     if (duplikat(k)) {
         typewrite(3, "Postoji vec korisnik sa tim imenom. Probajte ponovo.\n");
         
@@ -158,7 +169,7 @@ void registrujSe()
         typewrite(3, "Greska pri otvaranju fajla korisnika.\n");
         return;
     }
-
+    xor_operacija(&k, sizeof(KORISNIK));
     if (fwrite(&k, sizeof(KORISNIK), 1, users) != 1) {
         typewrite(3, "Greska pri upisu u fajl!\n");
         fclose(users);
@@ -244,7 +255,7 @@ void dodajUFajl(LOZINKA nova)
         typewrite(3,"Greska pri otvaranju fajla!\n");
         return;
     }
-
+    xor_operacija(&nova, sizeof(LOZINKA));
     if (fwrite(&nova, sizeof(LOZINKA), 1, fajl) != 1) {
         typewrite(3,"Greska pri upisu u fajl!\n");
     }
@@ -266,12 +277,13 @@ void prikaziLozinke()
 
     LOZINKA l;
     int i = 1;
-
     typewrite(3,"Prikaz sacuvanih lozinki:\n--------------------------\n");
     while (fread(&l, sizeof(LOZINKA), 1, fajl) == 1) {
+        xor_operacija(&l, sizeof(LOZINKA));
         typewrite(0.5f,"%d.) Servis: %s | Korisnik: %s | Lozinka: %s\n",
             i++, l.naziv, l.korisnickoIme, l.lozinka);
     }
+  
 
     fclose(fajl);
 }
@@ -311,8 +323,12 @@ void obrisiSveLozinke()
 
         while (fread(&l, sizeof(LOZINKA), 1, citanje))
         {
+            xor_operacija(&l, sizeof(LOZINKA));
+
             if (strcmp(l.naziv, naziv) != 0)
             {
+                xor_operacija(&l, sizeof(LOZINKA));
+
                 if (fwrite(&l, sizeof(LOZINKA), 1, pisanje) != 1)
                 {
                     typewrite(3,"Greska pri upisu.\n");
@@ -360,6 +376,7 @@ void obrisiSveLozinke()
   
      while (fread(&l, sizeof(LOZINKA), 1, fajl))
      {
+         xor_operacija(&l, sizeof(LOZINKA));
          if (strcmp(l.naziv, naziv) == 0)
          {
              
@@ -384,7 +401,7 @@ void obrisiSveLozinke()
                  fclose(fajl);
                  return;
              }
-           
+             xor_operacija(&nova, sizeof(LOZINKA));
              if (fwrite(&nova, sizeof(LOZINKA), 1, fajl) != 1)
                  typewrite(3,"Greska pri upisu u fajl!\n");
              else
