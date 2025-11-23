@@ -38,6 +38,7 @@ int main(void) {
 }
 void start()
 {
+    typewrite(1, "Autor: Vukasin Zivaljevic.");
     int unos;
     typewrite(1, "Dobrodosli.\n");
     typewrite(1, "1.Prijavite se\n");
